@@ -1,13 +1,12 @@
 ARG ARM
 ARG ARCH=${ARM:+arm32v7}
-FROM ${ARCH:-amd64}/python:3.10-slim-buster as base
+FROM jrottenberg/ffmpeg:4.1-vaapi as base
 
 FROM base as builder
 ENV PYTHONUNBUFFERED=1
 ARG ARM
 ARG LIB_ARCH=${ARM:+arm}
 ARG RTSP_ARCH=${ARM:+armv7}
-ARG FFMPEG_ARCH=${ARM:+armv7l}
 RUN apt-get update \
     && apt-get install -y tar unzip curl jq g++ \
     && apt-get clean \
@@ -16,8 +15,6 @@ RUN apt-get update \
 RUN pip3 install --disable-pip-version-check --prefix=/build/usr/local mintotp paho-mqtt requests pydantic xxtea
 COPY *.lib /tmp/lib/
 RUN mkdir -p /build/app /build/tokens /build/img \
-    && curl -L https://github.com/homebridge/ffmpeg-for-homebridge/releases/latest/download/ffmpeg-debian-${FFMPEG_ARCH:-x86_64}.tar.gz \
-    | tar xzf - -C /build \
     && RTSP_TAG=$(curl -s https://api.github.com/repos/aler9/rtsp-simple-server/releases/latest | jq -r .tag_name) \
     && echo -n $RTSP_TAG > /build/RTSP_TAG \
     && curl -L https://github.com/aler9/rtsp-simple-server/releases/download/${RTSP_TAG}/rtsp-simple-server_${RTSP_TAG}_linux_${RTSP_ARCH:-amd64}.tar.gz \
