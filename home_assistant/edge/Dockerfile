@@ -1,1 +1,1 @@
-FROM idisposablegithub365/wyze-bridge:edge
+FROM waelewida/wyze-bridge:edge

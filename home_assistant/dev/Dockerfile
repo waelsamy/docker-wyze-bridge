@@ -1,1 +1,1 @@
-FROM idisposablegithub365/wyze-bridge:dev
+FROM waelewida/wyze-bridge:dev

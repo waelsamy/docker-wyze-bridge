@@ -1,1 +1,1 @@
-FROM idisposablegithub365/wyze-bridge:hw
+FROM waelewida/wyze-bridge:hw
