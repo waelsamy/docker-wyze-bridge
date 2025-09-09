@@ -1,1 +1,1 @@
-FROM waelewida/wyze-bridge:api
+FROM waelewida/wyze-bridge:latest-api
