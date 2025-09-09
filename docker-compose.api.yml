@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  wyze-bridge-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: wyze-bridge-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"    # REST API and Web Interface
+    volumes:
+      - wyze_config:/tokens
+      - wyze_img:/app/img
+    environment:
+      # Required Wyze Credentials
+      - WYZE_EMAIL=${WYZE_EMAIL}
+      - WYZE_PASSWORD=${WYZE_PASSWORD}
+      - API_ID=${API_ID}
+      - API_KEY=${API_KEY}
+      
+      # API-Only Mode Configuration
+      - API_ONLY_MODE=true
+      - FLASK_RUN=${FLASK_RUN:-false}
+      - FLASK_PORT=5000
+      
+      # MQTT Configuration (optional)
+      - MQTT_ENABLED=${MQTT_ENABLED:-true}
+      - MQTT_HOST=${MQTT_HOST:-}
+      - MQTT_AUTH=${MQTT_AUTH:-}
+      - MQTT_TOPIC=${MQTT_TOPIC:-wyze-bridge}
+      - MQTT_DISCOVERY=${MQTT_DISCOVERY:-true}
+      
+      # Optional Configuration
+      - NET_MODE=${NET_MODE:-ANY}
+      - MOTION_API=${MOTION_API:-true}
+      - WB_AUTH=${WB_AUTH:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - IMG_TYPE=${IMG_TYPE:-jpg}
+      - SNAPSHOT_KEEP=${SNAPSHOT_KEEP:-7d}
+    networks:
+      - wyze-bridge-api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  wyze_config:
+    name: wyze_bridge_api_config
+  wyze_img:
+    name: wyze_bridge_api_img
+
+networks:
+  wyze-bridge-api:
+    name: wyze-bridge-api
