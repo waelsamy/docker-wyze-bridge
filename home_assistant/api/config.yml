@@ -2,8 +2,8 @@ name: Docker Wyze Bridge API-Only
 description: Lightweight API-only bridge for Wyze camera control and MQTT integration without video streaming
 slug: docker_wyze_bridge_api
 url: https://github.com/waelsamy/docker-wyze-bridge
-image: waelewida/wyze-bridge-api
-version: 4.1.2
+image: waelewida/wyze-bridge
+version: 4.1.3
 stage: stable
 arch:
   - armv7
@@ -33,6 +33,9 @@ options:
   API_ONLY_MODE: true
   MQTT: true
   MQTT_DISCOVERY: true
+  FLASK_APP: api_only
+  FLASK_ENV: production
+  FLASK_DEBUG: false
   CAM_OPTIONS: []
 schema:
   WYZE_EMAIL: email?
@@ -76,3 +79,8 @@ schema:
   LONGITUDE: float?
   API_ONLY_MODE: bool?
   MQTT_DISCOVERY: bool?
+  FLASK_APP: str?
+  FLASK_ENV: list(development|production)?
+  FLASK_DEBUG: bool?
+  FLASK_PORT: int?
+  FLASK_RUN: bool?
