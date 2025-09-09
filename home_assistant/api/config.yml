@@ -1,0 +1,78 @@
+name: Docker Wyze Bridge API-Only
+description: Lightweight API-only bridge for Wyze camera control and MQTT integration without video streaming
+slug: docker_wyze_bridge_api
+url: https://github.com/waelsamy/docker-wyze-bridge
+image: waelewida/wyze-bridge-api
+version: 4.0.0
+stage: stable
+arch:
+  - armv7
+  - aarch64
+  - amd64
+startup: application
+boot: auto
+apparmor: false
+hassio_api: true
+host_network: false
+ports:
+  5000/tcp: 5000
+ports_description:
+  5000/tcp: REST API and Web Interface http://localhost:5000
+map:
+  - addon_config:rw
+  - media:rw
+  - ssl:ro
+services:
+  - mqtt:want
+video: false
+ingress: true
+ingress_port: 5000
+panel_icon: mdi:api
+watchdog: http://[HOST]:[PORT:5000]/health
+options:
+  API_ONLY_MODE: true
+  MQTT: true
+  MQTT_DISCOVERY: true
+  CAM_OPTIONS: []
+schema:
+  WYZE_EMAIL: email?
+  WYZE_PASSWORD: password?
+  API_ID: match(\s*[a-fA-F0-9-]{36}\s*)?
+  API_KEY: match(\s*[a-zA-Z0-9]{60}\s*)?
+  REFRESH_TOKEN: str?
+  ACCESS_TOKEN: str?
+  TOTP_KEY: str?
+  NET_MODE: list(LAN|P2P|ANY)?
+  SNAPSHOT_FORMAT: str?
+  SNAPSHOT_KEEP: str?
+  IMG_TYPE: list(jpg|png)?
+  IMG_DIR: str?
+  MOTION_API: bool?
+  MOTION_INT: float(1.1,)?
+  MOTION_WEBHOOKS: str?
+  MQTT: bool?
+  MQTT_HOST: str?
+  MQTT_AUTH: str?
+  MQTT_TOPIC: str?
+  MQTT_DTOPIC: str?
+  MQTT_RETRIES: int?
+  FILTER_NAMES: str?
+  FILTER_MODELS: str?
+  FILTER_MACS: str?
+  FILTER_BLOCK: bool?
+  FRESH_DATA: bool?
+  URI_MAC: bool?
+  URI_SEPARATOR: list(-|_|#)?
+  LOG_LEVEL: list(FATAL|ERROR|WARNING|INFO|DEBUG)?
+  LOG_FILE: bool?
+  LOG_TIME: bool?
+  CAM_OPTIONS:
+    - CAM_NAME: str?
+      MOTION_WEBHOOKS: str?
+  WB_AUTH: bool?
+  WB_USERNAME: str?
+  WB_PASSWORD: str?
+  LATITUDE: float?
+  LONGITUDE: float?
+  API_ONLY_MODE: bool?
+  MQTT_DISCOVERY: bool?
