@@ -1,0 +1,1 @@
+FROM waelewida/wyze-bridge-api:latest
