@@ -53,7 +53,7 @@ jobs:
         run: |
           if [ "${{ matrix.dockerfile }}" = "api" ]; then
             echo "suffix=-api" >> $GITHUB_OUTPUT
-            echo "image_name=wyze-bridge-api" >> $GITHUB_OUTPUT
+            echo "image_name=wyze-bridge" >> $GITHUB_OUTPUT
           elif [ "${{ matrix.dockerfile }}" = "hwaccel" ]; then
             if [ "${{ matrix.qsv }}" = "0" ]; then
               echo "suffix=-hw" >> $GITHUB_OUTPUT
@@ -103,7 +103,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/${{ steps.image_type.outputs.image_name }}
           flavor: |
             latest=auto
-            suffix=${{ steps.image_type.outputs.suffix }},onlatest=true
+            suffix=${{ steps.image_type.outputs.suffix }},onlatest=false
           tags: |
             type=schedule,suffix=${{ steps.image_type.outputs.suffix }}
             type=semver,pattern={{version}},suffix=${{ steps.image_type.outputs.suffix }}
@@ -113,6 +113,8 @@ jobs:
             type=ref,event=branch,enable=${{ contains(github.ref,'dev') }},suffix=${{ steps.image_type.outputs.suffix }}
             type=ref,event=pr,suffix=${{ steps.image_type.outputs.suffix }}
             type=sha,format=long,suffix=${{ steps.image_type.outputs.suffix }}
+            type=raw,value=api,enable=${{ matrix.dockerfile == 'api' && github.ref == 'refs/heads/main' }}
+            type=raw,value=latest-api,enable=${{ matrix.dockerfile == 'api' && startsWith(github.ref, 'refs/tags/v') }}
 
       - name: Update Release Version
         id: version_bump
