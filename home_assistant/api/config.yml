@@ -3,7 +3,7 @@ description: Lightweight API-only bridge for Wyze camera control and MQTT integr
 slug: docker_wyze_bridge_api
 url: https://github.com/waelsamy/docker-wyze-bridge
 image: waelewida/wyze-bridge-api
-version: 4.1.1
+version: 4.1.2
 stage: stable
 arch:
   - armv7
