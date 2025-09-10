@@ -3,6 +3,7 @@ import signal
 import sys
 from dataclasses import replace
 from threading import Thread
+from time import sleep
 
 from wyzebridge.build_config import BUILD_STR, VERSION
 from wyzebridge.config import BRIDGE_IP, HASS_TOKEN, IMG_PATH, LLHLS, ON_DEMAND, STREAM_AUTH, TOKEN_PATH
@@ -15,6 +16,9 @@ from wyzebridge.stream_manager import StreamManager
 from wyzebridge.wyze_api import WyzeApi
 from wyzebridge.wyze_stream import WyzeStream, WyzeStreamOptions
 from wyzecam.api_models import WyzeAccount, WyzeCamera
+
+# API-only mode imports (loaded conditionally)
+# paho.mqtt.client imported in API-only class when needed
 
 setup_hass(HASS_TOKEN)
 
@@ -131,7 +135,90 @@ class WyzeBridge(Thread):
         logger.info("👋 goodbye!")
         sys.exit(0)
 
+
+class WyzeApiBridge(Thread):
+    """API-Only version of WyzeBridge focusing on camera control and MQTT integration."""
+    
+    __slots__ = "api", "mqtt_controller", "running", "mqtt_client"
+
+    def __init__(self) -> None:
+        Thread.__init__(self)
+        self.daemon = True
+        
+        for sig in ["SIGTERM", "SIGINT"]:
+            signal.signal(getattr(signal, sig), self.clean_up)
+
+        print(f"\n🚀 DOCKER-WYZE-BRIDGE API-ONLY v{VERSION} {BUILD_STR}\n")
+        print("📡 API-Only Mode: Video streaming disabled, camera control enabled\n")
+        
+        self.api: WyzeApi = WyzeApi()
+        self.mqtt_controller = None
+        self.mqtt_client = None
+        self.running = False
+
+    def health(self) -> dict:
+        """Return health status for API-only mode."""
+        wyze_authed = self.api.auth is not None and self.api.auth.access_token is not None
+        mqtt_connected = self.mqtt_client is not None and self.mqtt_client.is_connected() if self.mqtt_client else False
+        total_cameras = len(self.api.get_cameras() or [])
+        
+        return {
+            "wyze_authed": wyze_authed,
+            "mqtt_connected": mqtt_connected,
+            "total_cameras": total_cameras,
+            "api_only_mode": True
+        }
+
+    def run(self):
+        """Main API-only bridge loop."""
+        logger.info("Starting API-Only Bridge...")
+        self.running = True
+        
+        # Initialize MQTT if enabled
+        if env_bool("MQTT"):
+            try:
+                # Import here to avoid circular imports
+                from wyzebridge.mqtt_controller import MqttController
+                self.mqtt_controller = MqttController(self.api, self.api.get_cameras() or {})
+                self.mqtt_controller.start()
+                self.mqtt_client = self.mqtt_controller.client
+                logger.info("📡 MQTT Controller started")
+            except Exception as e:
+                logger.error(f"Failed to start MQTT: {e}")
+
+        # Start Flask API if enabled
+        if env_bool("FLASK_RUN", default=False):
+            from api_only import create_app
+            app = create_app()
+            app.run(host='0.0.0.0', port=int(env_bool("FLASK_PORT", default="5000")))
+        
+        # Keep running
+        try:
+            while self.running:
+                sleep(1)
+        except KeyboardInterrupt:
+            self.clean_up()
+
+    def clean_up(self, *_):
+        """Clean up API-only bridge."""
+        if not self.running:
+            sys.exit(0)
+        
+        self.running = False
+        if self.mqtt_controller:
+            self.mqtt_controller.stop()
+        logger.info("👋 API-Only Bridge goodbye!")
+        sys.exit(0)
+
+
 if __name__ == "__main__":
-    wb = WyzeBridge()
+    # Check if API-only mode is enabled
+    if env_bool("API_ONLY_MODE", default=False):
+        logger.info("🎯 Starting in API-Only Mode")
+        wb = WyzeApiBridge()
+    else:
+        logger.info("🚀 Starting in Full Bridge Mode") 
+        wb = WyzeBridge()
+    
     wb.run()
     sys.exit(0)
